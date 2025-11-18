@@ -1,6 +1,9 @@
 // script-bar.js
+console.log("script-bar.js loaded");
 
-//SVG + layout
+// ----------------------
+// 1. SVG + layout
+// ----------------------
 const barSvg = d3.select("#barchart");
 const barWidth = +barSvg.attr("width");
 const barHeight = +barSvg.attr("height");
@@ -36,10 +39,6 @@ barG.append("text")
     .attr("text-anchor", "middle")
     .text("Protein Supply (2022)");
 
-// tweak this string to match EXACTLY the protein indicator text in your CSV
-const PROTEIN_INDICATOR = "Protein supply (g/capita/day)";
-const TARGET_YEAR_COL = "Y2022";
-
 let barDataAll = [];
 
 // ----------------------
@@ -50,19 +49,25 @@ d3.csv("FoodSupply.csv").then(data => {
         d.country    = d["Area"];
         d.food_group = d["Food Group"];
         d.indicator  = d["Indicator"];
-        // parse 2022 value (you can change to Y2020/2021 if needed)
-        d.value2022  = d[TARGET_YEAR_COL] === "" ? null : +d[TARGET_YEAR_COL];
+        d.value2022  = d["Y2022"] === "" ? null : +d["Y2022"];
     });
 
     barDataAll = data;
 
-    // filter to protein rows with non-null 2022
+    // Log unique indicators so we can see the exact strings
+    const indicators = Array.from(new Set(barDataAll.map(d => d.indicator))).sort();
+    console.log("Unique Indicator values:", indicators);
+
+    // For now, just grab rows where indicator CONTAINS "protein" (case-insensitive)
     const proteinRows = barDataAll.filter(d =>
-        d.indicator === PROTEIN_INDICATOR &&
+        d.indicator &&
+        d.indicator.toLowerCase().includes("protein") &&
         d.value2022 !== null
     );
 
-    // populate country dropdown
+    console.log("Protein rows count:", proteinRows.length);
+
+    // Populate country dropdown from these protein rows
     const countries = Array.from(new Set(proteinRows.map(d => d.country))).sort();
     countries.forEach(c => {
         const opt = document.createElement("option");
@@ -75,11 +80,8 @@ d3.csv("FoodSupply.csv").then(data => {
         barCountrySelect.value = countries[0];
     }
 
-    // listener
-    barCountrySelect.addEventListener("change", updateBar);
-
-    // initial draw
-    updateBar();
+    barCountrySelect.addEventListener("change", () => updateBar(proteinRows));
+    updateBar(proteinRows);
 }).catch(err => {
     console.error("Error loading CSV for bar chart:", err);
 });
@@ -87,20 +89,19 @@ d3.csv("FoodSupply.csv").then(data => {
 // ----------------------
 // 3. Update bar chart
 // ----------------------
-function updateBar() {
+function updateBar(proteinRows) {
     const country = barCountrySelect.value;
     if (!country) return;
 
-    // subset: this country, protein indicator, non-null 2022, ignore "All food groups"
-    const subset = barDataAll.filter(d =>
+    // subset: this country, any food group, just protein-type indicators
+    const subset = proteinRows.filter(d =>
         d.country === country &&
-        d.indicator === PROTEIN_INDICATOR &&
-        d.value2022 !== null &&
-        d.food_group !== "All food groups"
+        d.value2022 !== null
     );
 
+    console.log("Subset for country", country, "size:", subset.length);
+
     if (subset.length === 0) {
-        // clear axes and bars if no data
         xBar.domain([]);
         yBar.domain([0, 1]);
         xBarAxisG.call(d3.axisBottom(xBar));
@@ -112,27 +113,22 @@ function updateBar() {
     // x domain: food groups
     xBar.domain(subset.map(d => d.food_group));
 
-    // y domain: 0 .. max value
+    // y domain
     const maxVal = d3.max(subset, d => d.value2022);
     yBar.domain([0, maxVal * 1.1]);
 
-    // x-axis with rotated labels
     xBarAxisG.call(d3.axisBottom(xBar))
         .selectAll("text")
         .attr("transform", "rotate(-40)")
         .style("text-anchor", "end");
 
-    // y-axis
     yBarAxisG.call(d3.axisLeft(yBar));
 
-    // join
     const bars = barG.selectAll("rect.bar")
-        .data(subset, d => d.food_group);
+        .data(subset, d => d.food_group + d.indicator);
 
-    // exit
     bars.exit().remove();
 
-    // enter
     const barsEnter = bars.enter()
         .append("rect")
         .attr("class", "bar")
@@ -142,7 +138,6 @@ function updateBar() {
         .attr("height", 0)
         .attr("fill", "#2ca02c");
 
-    // update + enter
     barsEnter.merge(bars)
         .transition()
         .duration(600)
@@ -151,9 +146,8 @@ function updateBar() {
         .attr("y", d => yBar(d.value2022))
         .attr("height", d => barInnerHeight - yBar(d.value2022));
 
-    // tooltips
     const allBars = barG.selectAll("rect.bar");
     allBars.select("title").remove();
     allBars.append("title")
-        .text(d => `${country}\n${d.food_group}\nProtein (2022): ${d.value2022}`);
+        .text(d => `${country}\n${d.food_group}\n${d.indicator}\n2022: ${d.value2022}`);
 }
