@@ -1,9 +1,7 @@
 
 // script-scatter.js
 
-// ----------------------
-// 1. Basic SVG setup
-// ----------------------
+// Basic SVG setup
 const scatterSvg = d3.select("#scatter");
 const scatterWidth = +scatterSvg.attr("width");
 const scatterHeight = +scatterSvg.attr("height");
@@ -51,9 +49,8 @@ scatterG.append("line")
 // We'll store all data here after loading
 let scatterDataAll = [];
 
-// ----------------------
-// 2. Load CSV data
-// ----------------------
+
+// Load CSV data
 // IMPORTANT: assumes FoodSupply.csv is in the same folder as index.html
 d3.csv("FoodSupply.csv").then(data => {
 
@@ -68,9 +65,8 @@ d3.csv("FoodSupply.csv").then(data => {
 
     scatterDataAll = data;
 
-    // ----------------------
-    // 3. Populate indicator dropdown
-    // ----------------------
+
+    // Populate indicator dropdown
     const indicators = Array.from(new Set(data.map(d => d.indicator))).sort();
 
     indicators.forEach(ind => {
@@ -105,9 +101,7 @@ d3.csv("FoodSupply.csv").then(data => {
     console.error("Error loading CSV for scatterplot:", err);
 });
 
-// ----------------------
 // 4. Update scatter for selected indicator
-// ----------------------
 function updateScatter() {
     const indicator = scatterIndicatorSelect.value;
 
