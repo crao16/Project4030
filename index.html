@@ -12,13 +12,19 @@
     <h1>Nutrition Visualizations</h1>
 
     <h2>Scatterplot (2010 vs 2022)</h2>
+    <p style="max-width: 800px; font-size: 16px; margin-top: 10px;">
+        Each point represents a country. The x-axis shows the nutrient supply in 2010 and the
+        y-axis shows the nutrient supply in 2022 for the selected indicator.
+    </p>
     <select id = "scatterIndicator"></select>
     <svg id = "scatter" width = "800" height="450"></svg>
+
 
     <h2>Line Chart (2010-2022)</h2>
     <select id="lineCountry"></select>
     <select id="lineIndicator"></select>
     <svg id="linechart" width="800" height="450"></svg>
+
 
     <h2>Bar Chart (Protein Supply by Food Group)</h2>
     <select id="barCountry"></select>
@@ -26,7 +32,7 @@
 
 
     <script src = "script-scatter.js"></script>
-    <script src = "script-line.js"></script>
-    <script src = "script-bar.js"></script>
+    <!--<script src = "script-line.js"></script>
+    <script src = "script-bar.js"></script>-->
   </body>
 </html>
