@@ -52,7 +52,7 @@ let scatterDataAll = [];
 
 // Load CSV data
 // IMPORTANT: assumes FoodSupply.csv is in the same folder as index.html
-d3.csv("FoodSupply.csv").then(data => {
+d3.csv("./FoodSupply.csv").then(data => {
 
     // Map FAOSTAT columns to convenient names
     data.forEach(d => {
