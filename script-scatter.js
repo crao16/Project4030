@@ -1,7 +1,9 @@
 
 // script-scatter.js
 
-// Basic SVG setup
+// ----------------------
+// 1. Basic SVG setup
+// ----------------------
 const scatterSvg = d3.select("#scatter");
 const scatterWidth = +scatterSvg.attr("width");
 const scatterHeight = +scatterSvg.attr("height");
@@ -49,8 +51,9 @@ scatterG.append("line")
 // We'll store all data here after loading
 let scatterDataAll = [];
 
-
-// Load CSV data
+// ----------------------
+// 2. Load CSV data
+// ----------------------
 // IMPORTANT: assumes FoodSupply.csv is in the same folder as index.html
 d3.csv("./FoodSupply.csv").then(data => {
 
@@ -65,8 +68,9 @@ d3.csv("./FoodSupply.csv").then(data => {
 
     scatterDataAll = data;
 
-
-    // Populate indicator dropdown
+    // ----------------------
+    // 3. Populate indicator dropdown
+    // ----------------------
     const indicators = Array.from(new Set(data.map(d => d.indicator))).sort();
 
     indicators.forEach(ind => {
@@ -85,13 +89,14 @@ d3.csv("./FoodSupply.csv").then(data => {
     updateScatter();
 
     // When dropdown changes, update scatter + notify others
-    scatterIndicatorSelect.addEventListener("change", () => {
+   /* scatterIndicatorSelect.addEventListener("change", () => {
         updateScatter();
 
         window.dispatchEvent(new CustomEvent("indicatorChange", {
             detail: { indicator: scatterIndicatorSelect.value }
         }));
     });
+    */
 
     // Fire initial event once for other views to listen to
     window.dispatchEvent(new CustomEvent("indicatorChange", {
@@ -101,16 +106,16 @@ d3.csv("./FoodSupply.csv").then(data => {
     console.error("Error loading CSV for scatterplot:", err);
 });
 
+// ----------------------
 // 4. Update scatter for selected indicator
+// ----------------------
 function updateScatter() {
-    const indicator = scatterIndicatorSelect.value;
+  //  const indicator = scatterIndicatorSelect.value;
 
-    // For now, use only "All food groups" to match your Tableau design
-    const TOTAL_GROUP = "All food groups";
-
-    const filtered = scatterDataAll.filter(d =>
-        d.indicator === indicator && d.food_group === TOTAL_GROUP
-    );
+  // Use ALL rows with valid numbers
+const filtered = scatterDataAll.filter(d =>
+    !isNaN(d.value2010) && !isNaN(d.value2022)
+);
 
     if (filtered.length === 0) {
         xScale.domain([0, 1]);
@@ -153,7 +158,9 @@ function updateScatter() {
         .append("circle")
         .attr("class", "data-point")
         .attr("r", 4)
-        .attr("fill", "#1f77b4")
+        .attr("fill", "none")
+        .attr("stroke", "#1f77b4")
+        .attr("stroke-width", 2)
         .attr("opacity", 0.8);
 
     // Merge enter + update
