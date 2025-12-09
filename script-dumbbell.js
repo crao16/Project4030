@@ -4,10 +4,10 @@
 
 const dumbbellSVG = d3.select("#dumbbell-chart");
 const dumbbellWidth = 400;
-const dumbbellHeight = 220;
+const dumbbellHeight = 190;
 dumbbellSVG.attr("viewBox", `0 0 ${dumbbellWidth} ${dumbbellHeight}`);
 
-const dumbbellMargin = { top: 10, right: 25, bottom: 30, left: 160 };
+const dumbbellMargin = { top: 8, right: 20, bottom: 25, left: 150 };
 const dumbbellInnerWidth = dumbbellWidth - dumbbellMargin.left - dumbbellMargin.right;
 const dumbbellInnerHeight = dumbbellHeight - dumbbellMargin.top - dumbbellMargin.bottom;
 

@@ -4,10 +4,10 @@
 
 const lineSVG = d3.select("#line-chart");
 const lineWidth = 380;
-const lineHeight = 220;
+const lineHeight = 190;
 lineSVG.attr("viewBox", `0 0 ${lineWidth} ${lineHeight}`);
 
-const lineMargin = { top: 15, right: 15, bottom: 30, left: 50 };
+const lineMargin = { top: 10, right: 15, bottom: 25, left: 45 };
 const lineInnerWidth = lineWidth - lineMargin.left - lineMargin.right;
 const lineInnerHeight = lineHeight - lineMargin.top - lineMargin.bottom;
 
