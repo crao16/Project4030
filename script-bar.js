@@ -3,11 +3,11 @@
 // ======================
 
 const barSVG = d3.select("#bar-chart");
-const barWidth = 400;
-const barHeight = 260;
+const barWidth = 380;
+const barHeight = 190;
 barSVG.attr("viewBox", `0 0 ${barWidth} ${barHeight}`);
 
-const barMargin = { top: 20, right: 20, bottom: 40, left: 160 };
+const barMargin = { top: 10, right: 15, bottom: 25, left: 130 };
 const barInnerWidth = barWidth - barMargin.left - barMargin.right;
 const barInnerHeight = barHeight - barMargin.top - barMargin.bottom;
 

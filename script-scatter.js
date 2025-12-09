@@ -63,11 +63,11 @@ window.colorScaleGroups = colorScaleGroups;
 // ======================
 
 const scatterSVG = d3.select("#scatterplot");
-const scatterWidth = 600;
-const scatterHeight = 500;
+const scatterWidth = 1200;
+const scatterHeight = 240;
 scatterSVG.attr("viewBox", `0 0 ${scatterWidth} ${scatterHeight}`);
 
-const scatterMargin = { top: 20, right: 20, bottom: 60, left: 70 };
+const scatterMargin = { top: 10, right: 20, bottom: 35, left: 45 };
 const scatterInnerWidth =
     scatterWidth - scatterMargin.left - scatterMargin.right;
 const scatterInnerHeight =
@@ -78,6 +78,7 @@ const scatterG = scatterSVG.append("g")
 
 let currentGroupFilter = null;
 let lastPointSelection = null; // { area, indicator }
+window.lastPointSelection = lastPointSelection;
 
 // background rect so clicking empty space clears filter
 const bgRect = scatterG.append("rect")
@@ -87,10 +88,12 @@ const bgRect = scatterG.append("rect")
     .attr("height", scatterInnerHeight)
     .attr("fill", "transparent")
     .on("click", () => {
-        // clear group filter and go back to last point selection
+        // clear group filter
         currentGroupFilter = null;
         resetScatterFilter();
         updateLegendStyles();
+        
+        // Restore last point selection charts
         if (lastPointSelection &&
             typeof updateBarChart === "function" &&
             typeof updateLineChart === "function") {
@@ -106,7 +109,7 @@ const yAxisG = scatterG.append("g");
 scatterG.append("text")
     .attr("class", "axis-label")
     .attr("x", scatterInnerWidth / 2)
-    .attr("y", scatterInnerHeight + 45)
+    .attr("y", scatterInnerHeight + 30)
     .attr("text-anchor", "middle")
     .text("2010 Supply Value (All Food Groups)");
 
@@ -114,7 +117,7 @@ scatterG.append("text")
     .attr("class", "axis-label")
     .attr("transform", "rotate(-90)")
     .attr("x", -scatterInnerHeight / 2)
-    .attr("y", -50)
+    .attr("y", -32)
     .attr("text-anchor", "middle")
     .text("2022 Supply Value (All Food Groups)");
 
@@ -139,6 +142,8 @@ const legendItems = legendDiv.selectAll(".legend-item")
             currentGroupFilter = null;
             resetScatterFilter();
             updateLegendStyles();
+            
+            // Restore last point selection
             if (lastPointSelection &&
                 typeof updateBarChart === "function" &&
                 typeof updateLineChart === "function") {
@@ -151,6 +156,14 @@ const legendItems = legendDiv.selectAll(".legend-item")
             clearSelection();
             applyScatterFilter(group);
             updateLegendStyles();
+            
+            // Show dumbbell chart for this group with current country
+            if (typeof updateDumbbellChart === "function") {
+                const country = lastPointSelection ? lastPointSelection.area : null;
+                updateDumbbellChart(group, country);
+            }
+            
+            // Update bar/line to show group-level data
             if (typeof updateBarChartGroup === "function") {
                 updateBarChartGroup(group);
             }
@@ -167,19 +180,22 @@ legendItems.append("div")
 legendItems.append("span")
     .text(d => d);
 
+// Add hint text
+legendDiv.append("span")
+    .attr("class", "legend-hint")
+    .text("← Click to filter & see breakdown");
+
 function updateLegendStyles() {
     legendDiv.selectAll(".legend-item")
         .style("opacity", d =>
             currentGroupFilter === null || currentGroupFilter === d ? 1 : 0.4
         )
-        .style("font-weight", d =>
-            currentGroupFilter === d ? "600" : "400"
-        );
+        .classed("active", d => currentGroupFilter === d);
 }
 
 function applyScatterFilter(group) {
     scatterG.selectAll(".dot")
-        .style("opacity", d => d.group === group ? 0.9 : 0.05);
+        .style("opacity", d => d.group === group ? 0.9 : 0.08);
 }
 
 function resetScatterFilter() {
@@ -190,6 +206,12 @@ function resetScatterFilter() {
 function clearSelection() {
     scatterG.selectAll(".dot").classed("selected", false);
 }
+
+// Function to highlight a specific point (called from dumbbell)
+window.highlightScatterPoint = function(area, indicator) {
+    scatterG.selectAll(".dot")
+        .classed("selected", d => d.area === area && d.indicator === indicator);
+};
 
 // ======================
 // LOAD DATA & DRAW
@@ -233,6 +255,7 @@ d3.csv("FoodSupply.csv").then(data => {
 
     let selected = scatterData[0];
     lastPointSelection = { area: selected.area, indicator: selected.indicator };
+    window.lastPointSelection = lastPointSelection;
 
     const dots = scatterG.selectAll(".dot")
         .data(scatterData)
@@ -245,12 +268,22 @@ d3.csv("FoodSupply.csv").then(data => {
         .attr("fill", d => colorScaleGroups(d.group))
         .on("click", (event, d) => {
             event.stopPropagation();
+            
+            // Clear group filter
             currentGroupFilter = null;
             resetScatterFilter();
             updateLegendStyles();
+            
             selected = d;
             lastPointSelection = { area: d.area, indicator: d.indicator };
+            window.lastPointSelection = lastPointSelection;
             highlightSelection();
+            
+            // Update dumbbell with the clicked point's group AND country
+            if (typeof updateDumbbellChart === "function") {
+                updateDumbbellChart(d.group, d.area);
+            }
+            
             if (typeof updateBarChart === "function") {
                 updateBarChart(d.area, d.indicator);
             }
@@ -281,4 +314,9 @@ d3.csv("FoodSupply.csv").then(data => {
         updateLineChart(selected.area, selected.indicator);
     }
     updateLegendStyles();
+    
+    // Show dumbbell chart with first group and first point's country
+    if (typeof updateDumbbellChart === "function") {
+        updateDumbbellChart(groupNames[0], selected.area);
+    }
 });
